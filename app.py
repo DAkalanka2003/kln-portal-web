@@ -5,8 +5,6 @@ import json
 import base64
 import threading
 import webbrowser
-import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
