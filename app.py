@@ -82,7 +82,6 @@ def init_driver():
     elif os.path.exists("/usr/bin/chromium-browser"):
         options.binary_location = "/usr/bin/chromium-browser"
 
-    # webdriver-manager මඟින් Codespaces වලට අවශ්‍යම Driver එක ඔටෝ මැనేජ් කර ගැනීම
     service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
