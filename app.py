@@ -19,15 +19,6 @@ st.set_page_config(
 )
 
 PORTAL_URL = "http://www.science.kln.ac.lk:8080/(S(aeobswamkffx5xku1veqzzrw))/sfkn.aspx"
-TIMETABLE_URL = "http://www.science.kln.ac.lk/index.php/component/content/article/examinations"
-
-TIMETABLE_LINK_KEYWORDS = [
-    "exam admission", "examination admission", "admission",
-    "exam time table", "exam timetable", "time table", "timetable"
-]
-
-DATE_REGEX = re.compile(r'\d{1,2}[/-]\d{1,2}[/-]\d{2,4}')
-TIME_REGEX = re.compile(r'\d{1,2}[:.]\d{2}\s*(AM|PM|am|pm)?')
 
 GRADE_POINTS = {
     "A+": 4.0, "A": 4.0, "A-": 3.7,
@@ -40,10 +31,10 @@ GRADE_POINTS = {
 st.markdown("""
     <style>
     .main { background-color: #0b0f19; color: #f9fafb; }
-    .stTextInput>div>div>input { background-color: #111827; color: #f9fafb; border: 1px solid #374151; }
-    .stSelectbox>div>div>div { background-color: #111827; color: #f9fafb; border: 1px solid #374151; }
-    div.stButton>button { background-color: #f59e0b; color: #0b0f19; font-weight: bold; border-radius: 6px; width: 100%; border: none; padding: 10px; }
-    div.stButton>button:hover { background-color: #fbbf24; color: #0b0f19; }
+    .stTextInput>div>div>input { background-color: #111827; color: #f9fafb; border: 1px solid #374151; border-radius: 8px; }
+    .stSelectbox>div>div>div { background-color: #111827; color: #f9fafb; border: 1px solid #374151; border-radius: 8px; }
+    div.stButton>button { background-color: #f59e0b; color: #0b0f19; font-weight: bold; border-radius: 8px; width: 100%; border: none; padding: 10px; transition: 0.3s; }
+    div.stButton>button:hover { background-color: #fbbf24; color: #0b0f19; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
     </style>
 """, unsafe_allow_html=True)
 
@@ -57,7 +48,7 @@ if "portal_data" not in st.session_state:
 
 # --- SYSTEM AUTHENTICATION GUARD ---
 if not st.session_state.logged_in:
-    st.markdown("<h2 style='text-align: center; color: #f59e0b;'>🛡️ System Authorization</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #f59e0b; margin-top: 50px;'>🛡️ System Authorization</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #9ca3af;'>Restricted Access Area • Enter System Credentials</p>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 1.2, 1])
@@ -82,7 +73,15 @@ def init_driver():
     options.add_argument("--headless=new")
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--window-size=1920,1080")
+    
+    # Streamlit Cloud (Linux) එක සඳහා Chromium Binary Path එක ලබා දීම
+    if os.path.exists("/usr/bin/chromium"):
+        options.binary_location = "/usr/bin/chromium"
+    elif os.path.exists("/usr/bin/chromium-browser"):
+        options.binary_location = "/usr/bin/chromium-browser"
+
     return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 def parse_student_name(html_source):
@@ -190,6 +189,7 @@ with col2:
                 st.warning("Please enter your Student Number!")
             else:
                 with st.spinner("Connecting to UoK Science Faculty Portal... Please wait."):
+                    driver = None
                     try:
                         driver = init_driver()
                         driver.get(PORTAL_URL)
@@ -232,7 +232,6 @@ with col2:
                                     "html": driver.page_source
                                 }
                             else:
-                                # Navigate to year if needed
                                 year_num = selected_year[0]
                                 select_elements = driver.find_elements(By.TAG_NAME, "select")
                                 for sel in select_elements:
@@ -255,9 +254,15 @@ with col2:
                             st.success("Data fetched successfully!")
                             st.rerun()
                         else:
-                            driver.quit()
+                            if driver:
+                                driver.quit()
                             st.error("Portal login inputs could not be identified automatically.")
                     except Exception as e:
+                        if driver:
+                            try:
+                                driver.quit()
+                            except:
+                                pass
                         st.error(f"Connection Error: {e}")
 
 # --- DISPLAY RESULTS OR TIMETABLE IF AVAILABLE ---
@@ -292,10 +297,8 @@ if st.session_state.portal_data:
     elif data["type"] == "timetable":
         st.subheader(f"📅 Exam Admission / Timetable — {data['student_no']}")
         st.markdown(f"**Student Name:** {data['student_name']}")
-        soup = BeautifulSoup(data["html"], 'html.path' if 'html.path' in dir(BeautifulSoup) else 'html.parser')
-        
-        # Simple text display or table extraction fallback
         st.info("Successfully accessed portal timetable page.")
-        if st.button("Clear View"):
-            st.session_state.portal_data = None
-            st.rerun()
+        
+    if st.button("🔄 Clear & Search Another"):
+        st.session_state.portal_data = None
+        st.rerun()
