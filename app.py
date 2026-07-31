@@ -8,6 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 
 # --- PAGE CONFIGURATION ---
@@ -76,13 +77,13 @@ def init_driver():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--window-size=1920,1080")
     
-    # Codespaces (Linux) සර්වර් එකේ Chromium බ්‍රව්සර් එක සහ ඩ්‍රයිවර් එක ලබා දීම
     if os.path.exists("/usr/bin/chromium"):
         options.binary_location = "/usr/bin/chromium"
     elif os.path.exists("/usr/bin/chromium-browser"):
         options.binary_location = "/usr/bin/chromium-browser"
 
-    service = Service("/usr/bin/chromedriver")
+    # webdriver-manager මඟින් Codespaces වලට අවශ්‍යම Driver එක ඔටෝ මැనేජ් කර ගැනීම
+    service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
 def parse_student_name(html_source):
