@@ -6,8 +6,8 @@ import streamlit as st
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 
 # --- PAGE CONFIGURATION ---
@@ -69,20 +69,21 @@ if not st.session_state.logged_in:
 
 # --- HELPER FUNCTIONS FOR SCRAPING ---
 def init_driver():
-    options = webdriver.ChromeOptions()
+    options = Options()
     options.add_argument("--headless=new")
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--window-size=1920,1080")
     
-    # Streamlit Cloud (Linux) එක සඳහා Chromium Binary Path එක ලබා දීම
+    # Streamlit Cloud (Linux) සර්වර් එකේ Chromium සහ ChromeDriver නිවැරදිව ලබා දීම
     if os.path.exists("/usr/bin/chromium"):
         options.binary_location = "/usr/bin/chromium"
     elif os.path.exists("/usr/bin/chromium-browser"):
         options.binary_location = "/usr/bin/chromium-browser"
 
-    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    service = Service("/usr/bin/chromedriver")
+    return webdriver.Chrome(service=service, options=options)
 
 def parse_student_name(html_source):
     soup = BeautifulSoup(html_source, 'html.parser')
