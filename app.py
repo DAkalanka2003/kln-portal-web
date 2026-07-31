@@ -76,7 +76,7 @@ def init_driver():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--window-size=1920,1080")
     
-    # Streamlit Cloud (Linux) සර්වර් එකේ Chromium සහ ChromeDriver නිවැරදිව ලබා දීම
+    # Codespaces (Linux) සර්වර් එකේ Chromium බ්‍රව්සර් එක සහ ඩ්‍රයිවර් එක ලබා දීම
     if os.path.exists("/usr/bin/chromium"):
         options.binary_location = "/usr/bin/chromium"
     elif os.path.exists("/usr/bin/chromium-browser"):
