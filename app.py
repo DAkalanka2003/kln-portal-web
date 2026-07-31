@@ -8,7 +8,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 
 # --- PAGE CONFIGURATION ---
@@ -76,14 +75,25 @@ def init_driver():
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--window-size=1920,1080")
+    options.add_argument("--remote-debugging-port=9222")
     
     if os.path.exists("/usr/bin/chromium"):
         options.binary_location = "/usr/bin/chromium"
     elif os.path.exists("/usr/bin/chromium-browser"):
         options.binary_location = "/usr/bin/chromium-browser"
 
-    service = Service(ChromeDriverManager().install())
-    return webdriver.Chrome(service=service, options=options)
+    # Codespaces Linux සර්වර් එකේ පවතින සැබෑ ක්‍රෝම් බයිනරි සහ ඩ්‍රයිවර් භාවිතය
+    service_paths = ["/usr/bin/chromedriver", "/usr/local/bin/chromedriver"]
+    service = None
+    for path in service_paths:
+        if os.path.exists(path):
+            service = Service(path)
+            break
+            
+    if service:
+        return webdriver.Chrome(service=service, options=options)
+    else:
+        return webdriver.Chrome(options=options)
 
 def parse_student_name(html_source):
     soup = BeautifulSoup(html_source, 'html.parser')
